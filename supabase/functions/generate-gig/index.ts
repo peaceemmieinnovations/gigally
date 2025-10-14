@@ -31,7 +31,7 @@ Tone: ${tone}
 Generate a complete gig package including:
 1. A compelling title (max 80 characters, keyword-rich)
 2. A short description (max 160 characters for SEO preview)
-3. A full description (600-1200 words, SEO-optimized, with clear sections)
+3. A full description (1000-1200 characters, SEO-optimized, with clear sections and proper spacing)
 4. Exactly 14 ranking tags (single words or short phrases, highly relevant)
 5. Three pricing tiers (Basic, Standard, Premium) with realistic prices and features
 6. 3-5 FAQs with answers
@@ -77,7 +77,7 @@ Make it professional, conversion-focused, and optimized for marketplace search a
                   },
                   description: {
                     type: "string",
-                    description: "Full gig description (600-1200 words, well-structured)",
+                    description: "Full gig description (1000-1200 characters, well-structured with proper spacing)",
                   },
                   tags: {
                     type: "array",

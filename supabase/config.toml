@@ -2,3 +2,6 @@ project_id = "snirgjmywulzxdhdorri"
 
 [functions.generate-gig]
 verify_jwt = true
+
+[functions.generate-gig-image]
+verify_jwt = true
