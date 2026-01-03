@@ -5,3 +5,9 @@ verify_jwt = true
 
 [functions.generate-gig-image]
 verify_jwt = true
+
+[functions.research-keywords]
+verify_jwt = true
+
+[functions.regenerate-section]
+verify_jwt = true

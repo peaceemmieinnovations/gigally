@@ -9,8 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Copy, Download, Sparkles, Loader2, Image as ImageIcon, Upload, X, Info } from "lucide-react";
+import { ArrowLeft, Copy, Download, Sparkles, Loader2, Image as ImageIcon, Upload, X, Info, Eye, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FiverrPreview } from "@/components/gig/FiverrPreview";
+import { UpworkPreview } from "@/components/gig/UpworkPreview";
+import { KeywordResearch } from "@/components/gig/KeywordResearch";
+import { RegenerateButton } from "@/components/gig/RegenerateButton";
 
 // Image dimension presets for Fiverr and Upwork
 const IMAGE_DIMENSIONS = {
@@ -37,6 +41,8 @@ const GigView = () => {
   const [customHeight, setCustomHeight] = useState(720);
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [designNotes, setDesignNotes] = useState("");
+  const [previewMarketplace, setPreviewMarketplace] = useState<"fiverr" | "upwork">("fiverr");
+  const [researchKeywords, setResearchKeywords] = useState<string[]>([]);
 
   useEffect(() => {
     loadGig();
@@ -63,6 +69,27 @@ const GigView = () => {
       setGig(data);
     }
     setLoading(false);
+  };
+
+  const updateGigField = async (field: string, value: any) => {
+    if (!id) return;
+
+    const { error } = await supabase
+      .from("gig_drafts")
+      .update({ [field]: value })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating gig:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes",
+        variant: "destructive",
+      });
+    } else {
+      setGig((prev: any) => ({ ...prev, [field]: value }));
+      toast({ title: "Saved!", description: `${field} updated successfully` });
+    }
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -120,7 +147,6 @@ const GigView = () => {
     try {
       const dimensions = getDimensions();
       
-      // Build enhanced prompt with references context
       let enhancedPrompt = imagePrompt;
       if (designNotes) {
         enhancedPrompt += `\n\nDesign notes: ${designNotes}`;
@@ -189,7 +215,7 @@ const GigView = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl">
           {/* Header */}
           <div className="mb-8">
             <div className="mb-4 flex items-center gap-3">
@@ -206,11 +232,13 @@ const GigView = () => {
 
           {/* Content Tabs */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="pricing">Pricing</TabsTrigger>
               <TabsTrigger value="faqs">FAQs</TabsTrigger>
               <TabsTrigger value="requirements">Requirements</TabsTrigger>
+              <TabsTrigger value="keywords">Keywords</TabsTrigger>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
               <TabsTrigger value="image">Gig Image</TabsTrigger>
             </TabsList>
 
@@ -219,13 +247,24 @@ const GigView = () => {
               <Card className="p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-2xl font-semibold">Title</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(gig.title, "Title")}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <RegenerateButton
+                      section="title"
+                      currentValue={gig.title}
+                      serviceName={gig.service_name}
+                      marketplace={gig.marketplace}
+                      tone={gig.tone}
+                      keywords={researchKeywords}
+                      onRegenerated={(newTitle) => updateGigField("title", newTitle)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(gig.title, "Title")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-lg">{gig.title}</p>
               </Card>
@@ -233,13 +272,24 @@ const GigView = () => {
               <Card className="p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-2xl font-semibold">Short Description</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(gig.short_description, "Short description")}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <RegenerateButton
+                      section="shortDescription"
+                      currentValue={gig.short_description}
+                      serviceName={gig.service_name}
+                      marketplace={gig.marketplace}
+                      tone={gig.tone}
+                      keywords={researchKeywords}
+                      onRegenerated={(newDesc) => updateGigField("short_description", newDesc)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(gig.short_description, "Short description")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-muted-foreground">{gig.short_description}</p>
               </Card>
@@ -247,21 +297,46 @@ const GigView = () => {
               <Card className="p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-2xl font-semibold">Full Description</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(gig.description, "Description")}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <RegenerateButton
+                      section="description"
+                      currentValue={gig.description}
+                      serviceName={gig.service_name}
+                      marketplace={gig.marketplace}
+                      tone={gig.tone}
+                      keywords={researchKeywords}
+                      onRegenerated={(newDesc) => updateGigField("description", newDesc)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(gig.description, "Description")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="prose max-w-none whitespace-pre-wrap">
                   {gig.description}
                 </div>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  Characters: {gig.description?.length || 0} / 1200
+                </div>
               </Card>
 
               <Card className="p-6">
-                <h2 className="mb-4 text-2xl font-semibold">Tags</h2>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-2xl font-semibold">Tags ({gig.tags?.length || 0}/14)</h2>
+                  <RegenerateButton
+                    section="tags"
+                    currentValue={gig.tags?.join(", ")}
+                    serviceName={gig.service_name}
+                    marketplace={gig.marketplace}
+                    tone={gig.tone}
+                    keywords={researchKeywords}
+                    onRegenerated={(newTags) => updateGigField("tags", newTags)}
+                  />
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {gig.tags?.map((tag: string, index: number) => (
                     <Badge key={index} variant="secondary">
@@ -283,6 +358,18 @@ const GigView = () => {
 
             {/* FAQs Tab */}
             <TabsContent value="faqs" className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-semibold">FAQs ({gig.faqs?.length || 0}/10)</h2>
+                <RegenerateButton
+                  section="faqs"
+                  currentValue={gig.faqs}
+                  serviceName={gig.service_name}
+                  marketplace={gig.marketplace}
+                  tone={gig.tone}
+                  keywords={researchKeywords}
+                  onRegenerated={(newFaqs) => updateGigField("faqs", newFaqs)}
+                />
+              </div>
               {gig.faqs?.map((faq: any, index: number) => (
                 <Card key={index} className="p-6">
                   <h3 className="mb-2 text-lg font-semibold">{faq.question}</h3>
@@ -303,6 +390,58 @@ const GigView = () => {
                     </li>
                   ))}
                 </ul>
+              </Card>
+            </TabsContent>
+
+            {/* Keyword Research Tab */}
+            <TabsContent value="keywords">
+              <KeywordResearch
+                serviceName={gig.service_name}
+                marketplace={gig.marketplace}
+                onApplyKeywords={(keywords) => {
+                  setResearchKeywords(keywords);
+                  toast({
+                    title: "Keywords Applied!",
+                    description: `${keywords.length} keywords will be used when regenerating sections`,
+                  });
+                }}
+              />
+            </TabsContent>
+
+            {/* Marketplace Preview Tab */}
+            <TabsContent value="preview" className="space-y-6">
+              <Card className="p-6">
+                <div className="mb-6 flex items-center gap-4">
+                  <Eye className="h-6 w-6 text-primary" />
+                  <div>
+                    <h2 className="text-2xl font-semibold">Marketplace Preview</h2>
+                    <p className="text-muted-foreground">See exactly how your gig will appear</p>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <Label>Select Marketplace</Label>
+                  <div className="mt-2 flex gap-2">
+                    <Button
+                      variant={previewMarketplace === "fiverr" ? "default" : "outline"}
+                      onClick={() => setPreviewMarketplace("fiverr")}
+                    >
+                      Fiverr
+                    </Button>
+                    <Button
+                      variant={previewMarketplace === "upwork" ? "default" : "outline"}
+                      onClick={() => setPreviewMarketplace("upwork")}
+                    >
+                      Upwork
+                    </Button>
+                  </div>
+                </div>
+
+                {previewMarketplace === "fiverr" ? (
+                  <FiverrPreview gig={gig} generatedImage={generatedImage} />
+                ) : (
+                  <UpworkPreview gig={gig} generatedImage={generatedImage} />
+                )}
               </Card>
             </TabsContent>
 
@@ -486,9 +625,7 @@ const GigView = () => {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => {
-                            setGeneratedImage(null);
-                          }}
+                          onClick={() => setGeneratedImage(null)}
                         >
                           Generate New
                         </Button>
