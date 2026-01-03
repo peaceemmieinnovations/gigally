@@ -12,25 +12,54 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, gigTitle } = await req.json();
+    const { prompt, gigTitle, width = 1280, height = 769, referenceImages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    console.log("Generating gig image for:", gigTitle);
+    console.log("Generating gig image for:", gigTitle, "Dimensions:", width, "x", height);
 
     // Enhanced prompt for gig images with blue-orange gradient theme
-    const enhancedPrompt = `Create a professional, high-quality gig image for a freelance marketplace (Fiverr/Upwork style). ${prompt}. 
+    let enhancedPrompt = `Create a PROFESSIONAL, HIGH-QUALITY gig image for a freelance marketplace (Fiverr/Upwork style).
 
-Requirements:
+${prompt}
+
+DESIGN REQUIREMENTS:
 - Incorporate blue and orange gradient colors as the main theme (#0B7DF2 to #FF7A00)
 - Professional, modern design suitable for a marketplace thumbnail
-- Clear, readable text if any
-- High contrast and visually appealing
-- Size optimized for 1280x768px (Fiverr gig image size)
-- Ultra high resolution`;
+- Clean typography with readable text if any
+- High contrast and visually appealing composition
+- Optimized for ${width}x${height}px dimensions
+- Balance between visual appeal and professionalism
+- Include subtle depth with shadows or gradients
+- Ultra high resolution quality`;
+
+    // If reference images provided, add instruction to be inspired but not copy
+    if (referenceImages && referenceImages.length > 0) {
+      enhancedPrompt += `
+
+INSPIRATION NOTES:
+Reference images have been provided for style inspiration. Create an ORIGINAL design that:
+- Takes the BEST elements from the references (color schemes, layouts, typography styles)
+- Does NOT directly copy any reference
+- Creates something UNIQUE and BETTER than the references
+- Maintains the professional marketplace aesthetic`;
+    }
+
+    // Build message content
+    const messageContent: any[] = [{ type: "text", text: enhancedPrompt }];
+    
+    // Add reference images if provided (for edit/inspiration mode)
+    if (referenceImages && referenceImages.length > 0) {
+      referenceImages.slice(0, 2).forEach((img: string) => {
+        messageContent.push({
+          type: "image_url",
+          image_url: { url: img }
+        });
+      });
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -43,7 +72,7 @@ Requirements:
         messages: [
           {
             role: "user",
-            content: enhancedPrompt,
+            content: messageContent,
           },
         ],
         modalities: ["image", "text"],
