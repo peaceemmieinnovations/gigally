@@ -53,6 +53,13 @@ CRITICAL SEO REQUIREMENTS:
 3. Include LSI (Latent Semantic Indexing) keywords in description
 4. Use buyer-intent phrases: "get", "need", "looking for", "hire"
 5. Include quantifiable results: numbers, percentages, timeframes
+6. Integrate TRENDING keywords in the niche
+
+KEYWORD TREND ANALYSIS:
+- Research current trending keywords for "${serviceName}"
+- Include emerging industry buzzwords
+- Use seasonal/timely terms if applicable
+- Add technology-specific keywords (tools, platforms, methods)
 
 GENERATE:
 1. TITLE: Max 80 chars, keyword-rich, compelling (${marketplace === "fiverr" ? 'MUST start with "I will"' : 'benefit-focused headline'})
@@ -68,7 +75,18 @@ GENERATE:
    - 5 medium-competition keywords  
    - 4 niche-specific long-tail keywords
 5. PRICING: Realistic tiers based on market research
-6. FAQs: 5 questions buyers actually ask (keyword-rich answers)
+6. FAQs: EXACTLY 10 keyword-rich FAQs covering:
+   - Turnaround time
+   - Revisions policy
+   - What's included/excluded
+   - Deliverable formats
+   - Communication
+   - Experience/qualifications
+   - Rush orders
+   - Bulk discounts
+   - Guarantees
+   - Technical requirements
+   Each answer must naturally include 1-2 relevant keywords.
 7. REQUIREMENTS: 6 clear, specific buyer requirements
 
 Make it IRRESISTIBLE to click and BUY.`;
@@ -173,8 +191,9 @@ Your gigs consistently outrank competitors because you:
                         answer: { type: "string" },
                       },
                     },
-                    minItems: 3,
-                    maxItems: 5,
+                    description: "Exactly 10 keyword-rich FAQs",
+                    minItems: 10,
+                    maxItems: 10,
                   },
                   requirements: {
                     type: "array",
