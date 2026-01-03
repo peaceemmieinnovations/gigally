@@ -21,23 +21,57 @@ serve(async (req) => {
 
     console.log("Generating gig for:", serviceName, marketplace);
 
-    // Build the prompt
-    const prompt = `You are an expert freelance marketplace gig creator. Create a complete, SEO-optimized gig for ${marketplace.toUpperCase()} with the following details:
+    // Build marketplace-specific guidance
+    const marketplaceGuidance = marketplace.toLowerCase() === "fiverr" 
+      ? `FIVERR-SPECIFIC OPTIMIZATION:
+- Title MUST start with "I will" (Fiverr requirement)
+- Use power words: professional, expert, custom, unlimited, fast, quality
+- Include 3-5 high-volume keywords naturally in description
+- Tags should include both broad and niche-specific terms
+- Pricing: Basic ($5-25), Standard ($25-75), Premium ($75-200+)
+- Add urgency and social proof language`
+      : `UPWORK PROJECT CATALOG OPTIMIZATION:
+- Title should be benefit-focused, NOT "I will" format
+- Focus on deliverables and outcomes
+- Use industry-specific terminology
+- Tags should match Upwork's job posting keywords
+- Pricing: Basic ($50-150), Standard ($150-400), Premium ($400-1000+)
+- Emphasize expertise and portfolio-quality work`;
 
-Service: ${serviceName}
-Target Audience: ${targetAudience || "General"}
-Tone: ${tone}
+    // Build the prompt with advanced SEO strategies
+    const prompt = `You are a TOP-RATED freelance marketplace expert who has generated 500+ gigs that rank on page 1. Create a HIGHLY OPTIMIZED gig for ${marketplace.toUpperCase()}.
 
-Generate a complete gig package including:
-1. A compelling title (max 80 characters, keyword-rich)
-2. A short description (max 160 characters for SEO preview)
-3. A full description (1000-1200 characters, SEO-optimized, with clear sections and proper spacing)
-4. Exactly 14 ranking tags (single words or short phrases, highly relevant)
-5. Three pricing tiers (Basic, Standard, Premium) with realistic prices and features
-6. 3-5 FAQs with answers
-7. 5-7 buyer requirements
+SERVICE: ${serviceName}
+TARGET AUDIENCE: ${targetAudience || "Small businesses and entrepreneurs"}
+TONE: ${tone}
 
-Make it professional, conversion-focused, and optimized for marketplace search algorithms.`;
+${marketplaceGuidance}
+
+CRITICAL SEO REQUIREMENTS:
+1. Research and use the TOP 5 most-searched keywords for "${serviceName}" naturally throughout
+2. Front-load the main keyword in title (first 3-4 words)
+3. Include LSI (Latent Semantic Indexing) keywords in description
+4. Use buyer-intent phrases: "get", "need", "looking for", "hire"
+5. Include quantifiable results: numbers, percentages, timeframes
+
+GENERATE:
+1. TITLE: Max 80 chars, keyword-rich, compelling (${marketplace === "fiverr" ? 'MUST start with "I will"' : 'benefit-focused headline'})
+2. SHORT DESCRIPTION: Exactly 150-160 chars, includes main keyword, creates urgency
+3. FULL DESCRIPTION: 1000-1200 characters with:
+   - Hook (first 2 lines grab attention with pain point or benefit)
+   - 3 clear sections with headers using markdown
+   - Bullet points for features/benefits
+   - Keywords naturally woven in (5+ occurrences)
+   - Strong CTA at the end
+4. TAGS: Exactly 14 tags - mix of:
+   - 5 high-volume keywords
+   - 5 medium-competition keywords  
+   - 4 niche-specific long-tail keywords
+5. PRICING: Realistic tiers based on market research
+6. FAQs: 5 questions buyers actually ask (keyword-rich answers)
+7. REQUIREMENTS: 6 clear, specific buyer requirements
+
+Make it IRRESISTIBLE to click and BUY.`;
 
     // Call Lovable AI
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -51,7 +85,19 @@ Make it professional, conversion-focused, and optimized for marketplace search a
         messages: [
           {
             role: "system",
-            content: "You are an expert at creating high-converting freelance marketplace gigs. You understand SEO, marketplace algorithms, and what buyers want to see.",
+            content: `You are a MASTER freelance marketplace consultant who has helped 1000+ sellers reach Top Rated status. You deeply understand:
+- Fiverr & Upwork search algorithms and ranking factors
+- Buyer psychology and conversion optimization  
+- SEO keyword research and strategic placement
+- Competitive pricing strategies
+- What makes buyers click "Order Now" vs scroll past
+
+Your gigs consistently outrank competitors because you:
+1. Research actual high-volume keywords buyers search for
+2. Write descriptions that solve problems, not just list features
+3. Price competitively based on market analysis
+4. Create urgency without being pushy
+5. Include social proof and credibility markers`,
           },
           {
             role: "user",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,18 +7,36 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Copy, Download, Sparkles, Loader2, Image as ImageIcon } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Copy, Download, Sparkles, Loader2, Image as ImageIcon, Upload, X, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Image dimension presets for Fiverr and Upwork
+const IMAGE_DIMENSIONS = {
+  fiverr_main: { width: 1280, height: 769, label: "Fiverr Main (1280×769)" },
+  fiverr_square: { width: 550, height: 370, label: "Fiverr Thumbnail (550×370)" },
+  upwork_catalog: { width: 1200, height: 630, label: "Upwork Catalog (1200×630)" },
+  upwork_square: { width: 800, height: 800, label: "Upwork Square (800×800)" },
+  social_og: { width: 1200, height: 630, label: "Social OG Image (1200×630)" },
+  custom: { width: 1280, height: 720, label: "Custom Size" },
+};
 
 const GigView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [gig, setGig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [selectedDimension, setSelectedDimension] = useState<keyof typeof IMAGE_DIMENSIONS>("fiverr_main");
+  const [customWidth, setCustomWidth] = useState(1280);
+  const [customHeight, setCustomHeight] = useState(720);
+  const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const [designNotes, setDesignNotes] = useState("");
 
   useEffect(() => {
     loadGig();
@@ -55,6 +73,39 @@ const GigView = () => {
     });
   };
 
+  const handleReferenceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Reference images must be under 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReferenceImages((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeReference = (index: number) => {
+    setReferenceImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const getDimensions = () => {
+    if (selectedDimension === "custom") {
+      return { width: customWidth, height: customHeight };
+    }
+    return IMAGE_DIMENSIONS[selectedDimension];
+  };
+
   const generateGigImage = async () => {
     if (!imagePrompt.trim()) {
       toast({
@@ -67,8 +118,25 @@ const GigView = () => {
 
     setGeneratingImage(true);
     try {
+      const dimensions = getDimensions();
+      
+      // Build enhanced prompt with references context
+      let enhancedPrompt = imagePrompt;
+      if (designNotes) {
+        enhancedPrompt += `\n\nDesign notes: ${designNotes}`;
+      }
+      if (referenceImages.length > 0) {
+        enhancedPrompt += `\n\nIMPORTANT: Create an ORIGINAL design that is INSPIRED BY but DOES NOT COPY the reference images. Take the best elements (color schemes, layouts, typography styles) and create something UNIQUE and BETTER. Do not replicate the references directly.`;
+      }
+
       const { data, error } = await supabase.functions.invoke("generate-gig-image", {
-        body: { prompt: imagePrompt, gigTitle: gig.title },
+        body: { 
+          prompt: enhancedPrompt, 
+          gigTitle: gig.title,
+          width: dimensions.width,
+          height: dimensions.height,
+          referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+        },
       });
 
       if (error) throw error;
@@ -76,7 +144,7 @@ const GigView = () => {
       setGeneratedImage(data.image);
       toast({
         title: "Success!",
-        description: "Gig image generated successfully",
+        description: `Gig image generated (${dimensions.width}×${dimensions.height})`,
       });
     } catch (error: any) {
       console.error("Error generating image:", error);
@@ -246,17 +314,130 @@ const GigView = () => {
                   <h2 className="text-2xl font-semibold">Gig Image Designer</h2>
                 </div>
                 <p className="mb-6 text-muted-foreground">
-                  Generate a professional gig image using AI. Describe what you want to see in your image.
+                  Generate a professional gig image using AI. Upload references for inspiration (we'll create something original and better).
                 </p>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Dimension Selector */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label>Image Dimensions</Label>
+                      <Select value={selectedDimension} onValueChange={(v) => setSelectedDimension(v as keyof typeof IMAGE_DIMENSIONS)}>
+                        <SelectTrigger className="mt-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(IMAGE_DIMENSIONS).map(([key, dim]) => (
+                            <SelectItem key={key} value={key}>
+                              {dim.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {selectedDimension === "custom" && (
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <Label>Width (px)</Label>
+                          <Input
+                            type="number"
+                            min={512}
+                            max={1920}
+                            value={customWidth}
+                            onChange={(e) => setCustomWidth(Math.min(1920, Math.max(512, parseInt(e.target.value) || 512)))}
+                            className="mt-2"
+                          />
+                        </div>
+                        <span className="pb-2 text-muted-foreground">×</span>
+                        <div className="flex-1">
+                          <Label>Height (px)</Label>
+                          <Input
+                            type="number"
+                            min={512}
+                            max={1920}
+                            value={customHeight}
+                            onChange={(e) => setCustomHeight(Math.min(1920, Math.max(512, parseInt(e.target.value) || 512)))}
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Dimension Preview */}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Info className="h-4 w-4" />
+                    <span>
+                      Output size: {getDimensions().width} × {getDimensions().height} pixels
+                    </span>
+                  </div>
+
+                  {/* Reference Images Upload */}
                   <div>
-                    <Label htmlFor="imagePrompt">Image Prompt</Label>
-                    <Input
+                    <Label>Reference Images (Optional)</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Upload samples for inspiration. AI will create an ORIGINAL design inspired by these, not a copy.
+                    </p>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      multiple
+                      onChange={handleReferenceUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full border-dashed"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Reference Images
+                    </Button>
+
+                    {referenceImages.length > 0 && (
+                      <div className="mt-4 grid grid-cols-3 gap-3">
+                        {referenceImages.map((img, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={img}
+                              alt={`Reference ${index + 1}`}
+                              className="h-24 w-full rounded-lg object-cover border"
+                            />
+                            <button
+                              onClick={() => removeReference(index)}
+                              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Image Prompt */}
+                  <div>
+                    <Label htmlFor="imagePrompt">Image Description</Label>
+                    <Textarea
                       id="imagePrompt"
-                      placeholder={`e.g., "Professional ${gig.service_name} service banner with blue and orange gradient, modern design"`}
+                      placeholder={`e.g., "Professional ${gig.service_name} service banner with modern typography, showing laptop with code, blue and orange gradient background, clean minimal design"`}
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
+                      className="mt-2 min-h-[100px]"
+                    />
+                  </div>
+
+                  {/* Design Notes */}
+                  <div>
+                    <Label htmlFor="designNotes">Additional Design Notes (Optional)</Label>
+                    <Textarea
+                      id="designNotes"
+                      placeholder="e.g., Include my service name prominently, add a badge showing '100% Satisfaction', use dark theme..."
+                      value={designNotes}
+                      onChange={(e) => setDesignNotes(e.target.value)}
                       className="mt-2"
                     />
                   </div>
@@ -265,6 +446,7 @@ const GigView = () => {
                     onClick={generateGigImage}
                     disabled={generatingImage}
                     className="w-full"
+                    size="lg"
                   >
                     {generatingImage ? (
                       <>
@@ -274,7 +456,7 @@ const GigView = () => {
                     ) : (
                       <>
                         <Sparkles className="mr-2 h-4 w-4" />
-                        Generate Gig Image
+                        Generate Gig Image ({getDimensions().width}×{getDimensions().height})
                       </>
                     )}
                   </Button>
@@ -282,14 +464,14 @@ const GigView = () => {
                   {generatedImage && (
                     <div className="mt-6 space-y-4">
                       <h3 className="text-lg font-semibold">Generated Image</h3>
-                      <div className="overflow-hidden rounded-lg border">
+                      <div className="overflow-hidden rounded-lg border bg-muted/20">
                         <img
                           src={generatedImage}
                           alt="Generated gig image"
                           className="h-auto w-full"
                         />
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           onClick={() => {
@@ -300,7 +482,15 @@ const GigView = () => {
                           }}
                         >
                           <Download className="mr-2 h-4 w-4" />
-                          Download Image
+                          Download PNG
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setGeneratedImage(null);
+                          }}
+                        >
+                          Generate New
                         </Button>
                       </div>
                     </div>
