@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, FileText, LogOut, Settings, Sparkles } from "lucide-react";
+import { Plus, FileText, LogOut, Settings, Sparkles, TrendingUp, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 
@@ -13,6 +13,9 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [gigs, setGigs] = useState<any[]>([]);
+  const [trendingNiches, setTrendingNiches] = useState<string[]>([]);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const gigsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Check auth status
@@ -51,6 +54,26 @@ const Dashboard = () => {
     } else {
       setGigs(data || []);
     }
+  };
+
+  const fetchTrendingNiches = async () => {
+    setLoadingInsights(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('research-keywords', {
+        body: { serviceName: 'freelance services', marketplace: 'fiverr' }
+      });
+      if (data?.trendingKeywords) {
+        setTrendingNiches(data.trendingKeywords.slice(0, 5));
+      }
+    } catch (err) {
+      console.error("Error fetching insights:", err);
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
+
+  const scrollToGigs = () => {
+    gigsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSignOut = async () => {
@@ -119,7 +142,10 @@ const Dashboard = () => {
             </p>
           </Card>
 
-          <Card className="p-6">
+          <Card 
+            className="cursor-pointer p-6 transition-all hover:shadow-lg hover:border-primary/50"
+            onClick={scrollToGigs}
+          >
             <div className="mb-4 inline-flex rounded-xl bg-muted p-3">
               <FileText className="h-6 w-6 text-primary" />
             </div>
@@ -129,19 +155,36 @@ const Dashboard = () => {
             </p>
           </Card>
 
-          <Card className="p-6">
+          <Card 
+            className="cursor-pointer p-6 transition-all hover:shadow-lg hover:border-secondary/50"
+            onClick={fetchTrendingNiches}
+          >
             <div className="mb-4 inline-flex rounded-xl bg-muted p-3">
-              <Sparkles className="h-6 w-6 text-secondary" />
+              {loadingInsights ? (
+                <Loader2 className="h-6 w-6 text-secondary animate-spin" />
+              ) : (
+                <TrendingUp className="h-6 w-6 text-secondary" />
+              )}
             </div>
             <h3 className="mb-2 text-xl font-semibold">AI Insights</h3>
-            <p className="text-muted-foreground">
-              Weekly trending niches coming soon
-            </p>
+            {trendingNiches.length > 0 ? (
+              <div className="space-y-1">
+                {trendingNiches.map((niche, i) => (
+                  <p key={i} className="text-sm text-muted-foreground flex items-center gap-1">
+                    <span className="text-secondary">•</span> {niche}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">
+                {loadingInsights ? "Fetching trends..." : "Click to discover trending niches"}
+              </p>
+            )}
           </Card>
         </div>
 
         {/* Recent Gigs */}
-        <div>
+        <div ref={gigsRef}>
           <h2 className="mb-6 text-2xl font-bold">Recent Gigs</h2>
           
           {gigs.length === 0 ? (
