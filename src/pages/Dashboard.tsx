@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, FileText, LogOut, Settings, Sparkles, TrendingUp, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus, FileText, LogOut, Settings, Sparkles, TrendingUp, Loader2, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GigImageDesigner } from "@/components/gig/GigImageDesigner";
 import type { User } from "@supabase/supabase-js";
 
 const Dashboard = () => {
@@ -15,6 +17,7 @@ const Dashboard = () => {
   const [gigs, setGigs] = useState<any[]>([]);
   const [trendingNiches, setTrendingNiches] = useState<string[]>([]);
   const [loadingInsights, setLoadingInsights] = useState(false);
+  const [showImageDesigner, setShowImageDesigner] = useState(false);
   const gigsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -128,7 +131,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card
             className="group cursor-pointer border-2 border-primary/20 p-6 transition-all hover:border-primary hover:shadow-lg"
             onClick={() => navigate("/gigs/create")}
@@ -152,6 +155,19 @@ const Dashboard = () => {
             <h3 className="mb-2 text-xl font-semibold">View Drafts</h3>
             <p className="text-muted-foreground">
               {gigs.length} gig{gigs.length !== 1 ? "s" : ""} saved
+            </p>
+          </Card>
+
+          <Card 
+            className="group cursor-pointer border-2 border-secondary/20 p-6 transition-all hover:border-secondary hover:shadow-lg"
+            onClick={() => gigs.length > 0 ? setShowImageDesigner(true) : toast({ title: "No gigs yet", description: "Create a gig first to use the image designer" })}
+          >
+            <div className="mb-4 inline-flex rounded-xl bg-gradient-to-br from-secondary to-primary p-3 text-white transition-transform group-hover:scale-110">
+              <ImageIcon className="h-6 w-6" />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold">Gig Image Designer</h3>
+            <p className="text-muted-foreground">
+              Create perfect marketplace images with AI
             </p>
           </Card>
 
@@ -237,6 +253,16 @@ const Dashboard = () => {
           )}
         </div>
       </main>
+
+      {/* Gig Image Designer Dialog */}
+      <Dialog open={showImageDesigner} onOpenChange={setShowImageDesigner}>
+        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Gig Image Designer</DialogTitle>
+          </DialogHeader>
+          <GigImageDesigner gigs={gigs} onClose={() => setShowImageDesigner(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
