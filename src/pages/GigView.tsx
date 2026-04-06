@@ -429,7 +429,15 @@ const GigView = () => {
 
             {/* SEO Score Tab */}
             <TabsContent value="score">
-              <GigScoring gig={gig} />
+              <GigScoring 
+                gig={gig} 
+                onFixAll={async (updates) => {
+                  for (const [field, value] of Object.entries(updates)) {
+                    await updateGigField(field, value);
+                  }
+                  await loadGig();
+                }}
+              />
             </TabsContent>
 
             {/* Export Tab */}
