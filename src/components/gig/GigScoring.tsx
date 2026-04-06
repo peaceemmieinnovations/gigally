@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -12,7 +14,9 @@ import {
   CheckCircle, 
   XCircle,
   Lightbulb,
-  RefreshCw
+  RefreshCw,
+  Wand2,
+  Loader2
 } from "lucide-react";
 
 interface GigData {
@@ -38,12 +42,16 @@ interface ScoreCategory {
 interface GigScoringProps {
   gig: GigData;
   onApplySuggestion?: (suggestion: string) => void;
+  onFixAll?: (updates: Partial<GigData>) => Promise<void>;
 }
 
-export const GigScoring = ({ gig, onApplySuggestion }: GigScoringProps) => {
+export const GigScoring = ({ gig, onApplySuggestion, onFixAll }: GigScoringProps) => {
   const [scores, setScores] = useState<ScoreCategory[]>([]);
   const [overallScore, setOverallScore] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
+  const [fixing, setFixing] = useState(false);
+  const [fixProgress, setFixProgress] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     analyzeGig();
@@ -401,6 +409,87 @@ export const GigScoring = ({ gig, onApplySuggestion }: GigScoringProps) => {
   const grade = getOverallGrade();
   const allSuggestions = scores.flatMap(s => s.suggestions);
 
+  const getSectionsToFix = () => {
+    const weakSections: string[] = [];
+    for (const cat of scores) {
+      const pct = (cat.score / cat.maxScore) * 100;
+      if (pct < 70) {
+        if (cat.name === "Title SEO") weakSections.push("title");
+        if (cat.name === "Description Quality") weakSections.push("description");
+        if (cat.name === "Tag Optimization") weakSections.push("tags");
+        if (cat.name === "FAQ Coverage") weakSections.push("faqs");
+        if (cat.name === "Keyword Density") {
+          if (!weakSections.includes("description")) weakSections.push("description");
+        }
+        if (cat.name === "Conversion Potential") {
+          if (!weakSections.includes("description")) weakSections.push("description");
+          weakSections.push("shortDescription");
+        }
+      }
+    }
+    return [...new Set(weakSections)];
+  };
+
+  const handleFixAll = async () => {
+    if (!onFixAll) return;
+    const sectionsToFix = getSectionsToFix();
+    if (sectionsToFix.length === 0) {
+      toast({ title: "All good!", description: "Your gig is already well-optimized." });
+      return;
+    }
+
+    setFixing(true);
+    const updates: Partial<GigData> = {};
+    const sectionLabels: Record<string, string> = {
+      title: "Title", description: "Description", tags: "Tags", faqs: "FAQs", shortDescription: "Short Description"
+    };
+
+    try {
+      for (const section of sectionsToFix) {
+        setFixProgress(`Optimizing ${sectionLabels[section] || section}...`);
+        
+        const currentValue = section === "shortDescription" ? gig.short_description
+          : section === "faqs" ? JSON.stringify(gig.faqs)
+          : section === "tags" ? gig.tags?.join(", ")
+          : (gig as any)[section] || "";
+
+        const { data, error } = await supabase.functions.invoke("regenerate-section", {
+          body: {
+            section,
+            currentValue,
+            serviceName: gig.service_name,
+            marketplace: gig.marketplace,
+            keywords: gig.tags?.slice(0, 5) || [],
+            tone: "professional",
+          },
+        });
+
+        if (error) {
+          console.error(`Failed to fix ${section}:`, error);
+          continue;
+        }
+
+        if (data.title) updates.title = data.title;
+        if (data.description) updates.description = data.description;
+        if (data.shortDescription) updates.short_description = data.shortDescription;
+        if (data.tags) updates.tags = data.tags;
+        if (data.faqs) updates.faqs = data.faqs;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await onFixAll(updates);
+        toast({ title: "SEO Fixed! 🚀", description: `Optimized ${Object.keys(updates).length} sections for better ranking.` });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to fix issues", variant: "destructive" });
+    } finally {
+      setFixing(false);
+      setFixProgress("");
+    }
+  };
+
+  const hasIssues = scores.some(s => (s.score / s.maxScore) * 100 < 70);
+
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -411,11 +500,30 @@ export const GigScoring = ({ gig, onApplySuggestion }: GigScoringProps) => {
             <p className="text-sm text-muted-foreground">Comprehensive analysis of your gig's optimization</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={analyzeGig} disabled={analyzing}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${analyzing ? "animate-spin" : ""}`} />
-          Re-analyze
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={analyzeGig} disabled={analyzing || fixing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${analyzing ? "animate-spin" : ""}`} />
+            Re-analyze
+          </Button>
+          {hasIssues && onFixAll && (
+            <Button size="sm" onClick={handleFixAll} disabled={fixing || analyzing} className="bg-gradient-to-r from-primary to-secondary text-primary-foreground">
+              {fixing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4 mr-2" />
+              )}
+              {fixing ? "Fixing..." : "Fix All Issues"}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {fixing && fixProgress && (
+        <div className="mb-6 p-4 bg-primary/10 rounded-lg flex items-center gap-3">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-sm font-medium">{fixProgress}</span>
+        </div>
+      )}
 
       {/* Overall Score */}
       <div className="mb-8 p-6 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl">
