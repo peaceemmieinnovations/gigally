@@ -17,6 +17,7 @@ import { KeywordResearch } from "@/components/gig/KeywordResearch";
 import { RegenerateButton } from "@/components/gig/RegenerateButton";
 import { GigScoring } from "@/components/gig/GigScoring";
 import { GigExport } from "@/components/gig/GigExport";
+import { cleanMarkdown } from "@/lib/format";
 
 const IMAGE_DIMENSIONS = {
   fiverr_main: { width: 1280, height: 769, label: "Fiverr Main (1280×769)" },
@@ -45,299 +46,209 @@ const GigView = () => {
   const [previewMarketplace, setPreviewMarketplace] = useState<"fiverr" | "upwork">("fiverr");
   const [researchKeywords, setResearchKeywords] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadGig();
-  }, [id]);
+  useEffect(() => { loadGig(); }, [id]);
 
   const loadGig = async () => {
     if (!id) return;
-    const { data, error } = await supabase
-      .from("gig_drafts")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      toast({ title: "Error loading gig", description: "Could not find this gig", variant: "destructive" });
-      navigate("/dashboard");
-    } else {
-      setGig(data);
-    }
+    const { data, error } = await supabase.from("gig_drafts").select("*").eq("id", id).single();
+    if (error) { toast({ title: "Error loading gig", variant: "destructive" }); navigate("/dashboard"); }
+    else setGig(data);
     setLoading(false);
   };
 
   const updateGigField = async (field: string, value: any) => {
     if (!id) return;
     const { error } = await supabase.from("gig_drafts").update({ [field]: value }).eq("id", id);
-    if (error) {
-      toast({ title: "Error", description: "Failed to save changes", variant: "destructive" });
-    } else {
-      setGig((prev: any) => ({ ...prev, [field]: value }));
-      toast({ title: "Saved!", description: `${field} updated successfully` });
-    }
+    if (error) toast({ title: "Error", description: "Failed to save", variant: "destructive" });
+    else { setGig((prev: any) => ({ ...prev, [field]: value })); toast({ title: "Saved!" }); }
   };
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: `${label} copied to clipboard` });
+    navigator.clipboard.writeText(cleanMarkdown(text));
+    toast({ title: "Copied!", description: `${label} copied` });
   };
 
   const handleReferenceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     Array.from(files).forEach((file) => {
-      if (file.size > 5 * 1024 * 1024) {
-        toast({ title: "File too large", description: "Reference images must be under 5MB", variant: "destructive" });
-        return;
-      }
+      if (file.size > 5 * 1024 * 1024) { toast({ title: "File too large", variant: "destructive" }); return; }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setReferenceImages((prev) => [...prev, reader.result as string]);
-      };
+      reader.onloadend = () => setReferenceImages((prev) => [...prev, reader.result as string]);
       reader.readAsDataURL(file);
     });
   };
 
-  const removeReference = (index: number) => {
-    setReferenceImages((prev) => prev.filter((_, i) => i !== index));
-  };
+  const removeReference = (index: number) => setReferenceImages((prev) => prev.filter((_, i) => i !== index));
 
-  const getDimensions = () => {
-    if (selectedDimension === "custom") return { width: customWidth, height: customHeight };
-    return IMAGE_DIMENSIONS[selectedDimension];
-  };
+  const getDimensions = () => selectedDimension === "custom" ? { width: customWidth, height: customHeight } : IMAGE_DIMENSIONS[selectedDimension];
 
   const generateGigImage = async () => {
-    if (!imagePrompt.trim()) {
-      toast({ title: "Error", description: "Please enter a prompt for the image", variant: "destructive" });
-      return;
-    }
+    if (!imagePrompt.trim()) { toast({ title: "Enter a prompt", variant: "destructive" }); return; }
     setGeneratingImage(true);
     try {
       const dimensions = getDimensions();
       let enhancedPrompt = imagePrompt;
       if (designNotes) enhancedPrompt += `\n\nDesign notes: ${designNotes}`;
       if (referenceImages.length > 0) enhancedPrompt += `\n\nIMPORTANT: Create an ORIGINAL design INSPIRED BY but NOT copying the references.`;
-
       const { data, error } = await supabase.functions.invoke("generate-gig-image", {
         body: { prompt: enhancedPrompt, gigTitle: gig.title, width: dimensions.width, height: dimensions.height, referenceImages: referenceImages.length > 0 ? referenceImages : undefined },
       });
       if (error) throw error;
       setGeneratedImage(data.image);
-      toast({ title: "Success!", description: `Gig image generated (${dimensions.width}×${dimensions.height})` });
+      toast({ title: "Image generated!", description: `${dimensions.width}×${dimensions.height}` });
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to generate image", variant: "destructive" });
-    } finally {
-      setGeneratingImage(false);
-    }
+    } finally { setGeneratingImage(false); }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!gig) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <header className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 border-b glass">
+        <div className="container mx-auto flex items-center justify-between px-4 py-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => {
-              const el = document.getElementById("export-tab");
-              el?.click();
-            }}>
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" onClick={() => document.getElementById("export-tab")?.click()}>
+            <Download className="mr-1.5 h-4 w-4" /> Export
+          </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8">
-            <div className="mb-4 flex items-center gap-3">
-              <Badge className="bg-gradient-to-r from-primary to-secondary text-primary-foreground">
-                {gig.marketplace}
-              </Badge>
-              <Badge variant="outline">{gig.status}</Badge>
+      <main className="container mx-auto px-4 py-6 md:py-10">
+        <div className="mx-auto max-w-5xl">
+          {/* Header */}
+          <div className="mb-6 md:mb-8">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <Badge className="gradient-btn text-primary-foreground text-xs">{gig.marketplace}</Badge>
+              <Badge variant="outline" className="text-xs">{gig.status}</Badge>
+              <span className="text-xs text-muted-foreground">{new Date(gig.created_at).toLocaleDateString()}</span>
             </div>
-            <h1 className="mb-2 text-4xl font-bold">{gig.title}</h1>
-            <p className="text-muted-foreground">
-              Created {new Date(gig.created_at).toLocaleDateString()}
-            </p>
+            <h1 className="text-2xl md:text-3xl font-bold">{cleanMarkdown(gig.title)}</h1>
           </div>
 
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="flex w-full flex-wrap gap-1">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="pricing">Pricing</TabsTrigger>
-              <TabsTrigger value="faqs">FAQs</TabsTrigger>
-              <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              <TabsTrigger value="keywords">Keywords</TabsTrigger>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-              <TabsTrigger value="image">Gig Image</TabsTrigger>
-              <TabsTrigger value="score">SEO Score</TabsTrigger>
-              <TabsTrigger value="export" id="export-tab">Export</TabsTrigger>
+          <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
+            <TabsList className="w-full flex-wrap h-auto gap-1 p-1">
+              <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="pricing" className="text-xs md:text-sm">Pricing</TabsTrigger>
+              <TabsTrigger value="faqs" className="text-xs md:text-sm">FAQs</TabsTrigger>
+              <TabsTrigger value="requirements" className="text-xs md:text-sm">Requirements</TabsTrigger>
+              <TabsTrigger value="keywords" className="text-xs md:text-sm">Keywords</TabsTrigger>
+              <TabsTrigger value="preview" className="text-xs md:text-sm">Preview</TabsTrigger>
+              <TabsTrigger value="image" className="text-xs md:text-sm">Image</TabsTrigger>
+              <TabsTrigger value="score" className="text-xs md:text-sm">SEO Score</TabsTrigger>
+              <TabsTrigger value="export" id="export-tab" className="text-xs md:text-sm">Export</TabsTrigger>
             </TabsList>
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              <Card className="p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Title</h2>
-                  <div className="flex gap-2">
-                    <RegenerateButton section="title" currentValue={gig.title} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("title", v)} />
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(gig.title, "Title")}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-lg">{gig.title}</p>
-              </Card>
+            {/* Overview */}
+            <TabsContent value="overview" className="space-y-4">
+              <SectionCard title="Title" onCopy={() => copyToClipboard(gig.title, "Title")}
+                regenerate={<RegenerateButton section="title" currentValue={gig.title} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("title", v)} />}>
+                <p className="text-base md:text-lg font-medium">{cleanMarkdown(gig.title)}</p>
+              </SectionCard>
 
-              <Card className="p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Short Description</h2>
-                  <div className="flex gap-2">
-                    <RegenerateButton section="shortDescription" currentValue={gig.short_description} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("short_description", v)} />
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(gig.short_description, "Short description")}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-muted-foreground">{gig.short_description}</p>
-              </Card>
+              <SectionCard title="Short Description" onCopy={() => copyToClipboard(gig.short_description, "Short description")}
+                regenerate={<RegenerateButton section="shortDescription" currentValue={gig.short_description} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("short_description", v)} />}>
+                <p className="text-sm text-muted-foreground">{cleanMarkdown(gig.short_description)}</p>
+              </SectionCard>
 
-              <Card className="p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Full Description</h2>
-                  <div className="flex gap-2">
-                    <RegenerateButton section="description" currentValue={gig.description} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("description", v)} />
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(gig.description, "Description")}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
+              <SectionCard title="Full Description" onCopy={() => copyToClipboard(gig.description, "Description")}
+                regenerate={<RegenerateButton section="description" currentValue={gig.description} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("description", v)} />}>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{cleanMarkdown(gig.description)}</p>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  {gig.description?.length || 0} / 1200 characters
                 </div>
-                <div className="prose max-w-none whitespace-pre-wrap">{gig.description}</div>
-                <div className="mt-4 text-sm text-muted-foreground">
-                  Characters: {gig.description?.length || 0} / 1200
-                </div>
-              </Card>
+              </SectionCard>
 
-              <Card className="p-6">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Tags ({gig.tags?.length || 0}/14)</h2>
-                  <RegenerateButton section="tags" currentValue={gig.tags?.join(", ")} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("tags", v)} />
-                </div>
-                <div className="flex flex-wrap gap-2">
+              <SectionCard title={`Tags (${gig.tags?.length || 0}/14)`}
+                regenerate={<RegenerateButton section="tags" currentValue={gig.tags?.join(", ")} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("tags", v)} />}>
+                <div className="flex flex-wrap gap-1.5">
                   {gig.tags?.map((tag: string, index: number) => (
-                    <Badge key={index} variant="secondary">{tag}</Badge>
+                    <Badge key={index} variant="secondary" className="text-xs">{cleanMarkdown(tag)}</Badge>
                   ))}
                 </div>
-              </Card>
+              </SectionCard>
             </TabsContent>
 
-            {/* Pricing Tab */}
-            <TabsContent value="pricing" className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-3">
+            {/* Pricing */}
+            <TabsContent value="pricing">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
                 <PricingCard tier="Basic" data={gig.pricing_basic} />
                 <PricingCard tier="Standard" data={gig.pricing_standard} />
                 <PricingCard tier="Premium" data={gig.pricing_premium} />
               </div>
             </TabsContent>
 
-            {/* FAQs Tab */}
-            <TabsContent value="faqs" className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">FAQs ({gig.faqs?.length || 0}/10)</h2>
+            {/* FAQs */}
+            <TabsContent value="faqs" className="space-y-3">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold">FAQs ({gig.faqs?.length || 0}/10)</h2>
                 <RegenerateButton section="faqs" currentValue={gig.faqs} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("faqs", v)} />
               </div>
               {gig.faqs?.map((faq: any, index: number) => (
-                <Card key={index} className="p-6">
-                  <h3 className="mb-2 text-lg font-semibold">{faq.question}</h3>
-                  <p className="text-muted-foreground">{faq.answer}</p>
+                <Card key={index} className="p-4 shadow-card">
+                  <h3 className="mb-1.5 text-sm font-semibold">{cleanMarkdown(faq.question)}</h3>
+                  <p className="text-sm text-muted-foreground">{cleanMarkdown(faq.answer)}</p>
                 </Card>
               ))}
             </TabsContent>
 
-            {/* Requirements Tab */}
+            {/* Requirements */}
             <TabsContent value="requirements">
-              <Card className="p-6">
-                <h2 className="mb-4 text-2xl font-semibold">Buyer Requirements</h2>
+              <Card className="p-4 md:p-6 shadow-card">
+                <h2 className="mb-3 text-lg font-semibold">Buyer Requirements</h2>
                 <ul className="space-y-2">
                   {gig.requirements?.map((req: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="text-primary">•</span>
-                      <span>{req}</span>
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>{cleanMarkdown(req)}</span>
                     </li>
                   ))}
                 </ul>
               </Card>
             </TabsContent>
 
-            {/* Keywords Tab */}
+            {/* Keywords */}
             <TabsContent value="keywords">
-              <KeywordResearch
-                serviceName={gig.service_name}
-                marketplace={gig.marketplace}
-                onApplyKeywords={(keywords) => {
-                  setResearchKeywords(keywords);
-                  toast({ title: "Keywords Applied!", description: `${keywords.length} keywords will be used when regenerating sections` });
-                }}
-              />
+              <KeywordResearch serviceName={gig.service_name} marketplace={gig.marketplace}
+                onApplyKeywords={(keywords) => { setResearchKeywords(keywords); toast({ title: "Keywords Applied!", description: `${keywords.length} keywords applied` }); }} />
             </TabsContent>
 
-            {/* Preview Tab */}
-            <TabsContent value="preview" className="space-y-6">
-              <Card className="p-6">
-                <div className="mb-6 flex items-center gap-4">
-                  <Eye className="h-6 w-6 text-primary" />
+            {/* Preview */}
+            <TabsContent value="preview" className="space-y-4">
+              <Card className="p-4 md:p-6 shadow-card">
+                <div className="mb-4 flex items-center gap-3">
+                  <Eye className="h-5 w-5 text-primary" />
                   <div>
-                    <h2 className="text-2xl font-semibold">Marketplace Preview</h2>
-                    <p className="text-muted-foreground">See exactly how your gig will appear</p>
+                    <h2 className="text-lg font-semibold">Marketplace Preview</h2>
+                    <p className="text-xs text-muted-foreground">See how your gig appears on each platform</p>
                   </div>
                 </div>
-                <div className="mb-6">
-                  <Label>Select Marketplace</Label>
-                  <div className="mt-2 flex gap-2">
-                    <Button variant={previewMarketplace === "fiverr" ? "default" : "outline"} onClick={() => setPreviewMarketplace("fiverr")}>Fiverr</Button>
-                    <Button variant={previewMarketplace === "upwork" ? "default" : "outline"} onClick={() => setPreviewMarketplace("upwork")}>Upwork</Button>
-                  </div>
+                <div className="mb-4 flex gap-2">
+                  <Button size="sm" variant={previewMarketplace === "fiverr" ? "default" : "outline"} onClick={() => setPreviewMarketplace("fiverr")}>Fiverr</Button>
+                  <Button size="sm" variant={previewMarketplace === "upwork" ? "default" : "outline"} onClick={() => setPreviewMarketplace("upwork")}>Upwork</Button>
                 </div>
-                {previewMarketplace === "fiverr" ? (
-                  <FiverrPreview gig={gig} generatedImage={generatedImage} />
-                ) : (
-                  <UpworkPreview gig={gig} generatedImage={generatedImage} />
-                )}
+                {previewMarketplace === "fiverr" ? <FiverrPreview gig={gig} generatedImage={generatedImage} /> : <UpworkPreview gig={gig} generatedImage={generatedImage} />}
               </Card>
             </TabsContent>
 
-            {/* Image Tab */}
-            <TabsContent value="image" className="space-y-6">
-              <Card className="p-6">
+            {/* Image */}
+            <TabsContent value="image" className="space-y-4">
+              <Card className="p-4 md:p-6 shadow-card">
                 <div className="mb-4 flex items-center gap-2">
-                  <ImageIcon className="h-6 w-6 text-primary" />
-                  <h2 className="text-2xl font-semibold">Gig Image Designer</h2>
+                  <ImageIcon className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-semibold">Gig Image Designer</h2>
                 </div>
-                <p className="mb-6 text-muted-foreground">
-                  Generate a professional gig image using AI. Upload references for inspiration.
-                </p>
-                <div className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-2">
+                <p className="mb-4 text-sm text-muted-foreground">Generate a professional gig image. Upload references for inspiration.</p>
+                <div className="space-y-4">
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                     <div>
-                      <Label>Image Dimensions</Label>
+                      <Label className="text-xs">Image Dimensions</Label>
                       <Select value={selectedDimension} onValueChange={(v) => setSelectedDimension(v as keyof typeof IMAGE_DIMENSIONS)}>
-                        <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {Object.entries(IMAGE_DIMENSIONS).map(([key, dim]) => (
                             <SelectItem key={key} value={key}>{dim.label}</SelectItem>
@@ -348,36 +259,36 @@ const GigView = () => {
                     {selectedDimension === "custom" && (
                       <div className="flex gap-2 items-end">
                         <div className="flex-1">
-                          <Label>Width (px)</Label>
-                          <Input type="number" min={512} max={1920} value={customWidth} onChange={(e) => setCustomWidth(Math.min(1920, Math.max(512, parseInt(e.target.value) || 512)))} className="mt-2" />
+                          <Label className="text-xs">Width</Label>
+                          <Input type="number" min={512} max={1920} value={customWidth} onChange={(e) => setCustomWidth(Math.min(1920, Math.max(512, parseInt(e.target.value) || 512)))} className="mt-1.5" />
                         </div>
-                        <span className="pb-2 text-muted-foreground">×</span>
+                        <span className="pb-2 text-muted-foreground text-sm">×</span>
                         <div className="flex-1">
-                          <Label>Height (px)</Label>
-                          <Input type="number" min={512} max={1920} value={customHeight} onChange={(e) => setCustomHeight(Math.min(1920, Math.max(512, parseInt(e.target.value) || 512)))} className="mt-2" />
+                          <Label className="text-xs">Height</Label>
+                          <Input type="number" min={512} max={1920} value={customHeight} onChange={(e) => setCustomHeight(Math.min(1920, Math.max(512, parseInt(e.target.value) || 512)))} className="mt-1.5" />
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Info className="h-4 w-4" />
-                    <span>Output size: {getDimensions().width} × {getDimensions().height} pixels</span>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Info className="h-3.5 w-3.5" />
+                    <span>Output: {getDimensions().width} × {getDimensions().height}px</span>
                   </div>
 
                   <div>
-                    <Label>Reference Images (Optional)</Label>
-                    <p className="text-sm text-muted-foreground mb-2">Upload samples for inspiration. AI will create an ORIGINAL design.</p>
+                    <Label className="text-xs">Reference Images (Optional)</Label>
+                    <p className="text-xs text-muted-foreground mb-1.5">Upload samples — AI creates an ORIGINAL design.</p>
                     <input type="file" ref={fileInputRef} accept="image/*" multiple onChange={handleReferenceUpload} className="hidden" />
-                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full border-dashed">
-                      <Upload className="mr-2 h-4 w-4" /> Upload Reference Images
+                    <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="w-full border-dashed">
+                      <Upload className="mr-1.5 h-3.5 w-3.5" /> Upload References
                     </Button>
                     {referenceImages.length > 0 && (
-                      <div className="mt-4 grid grid-cols-3 gap-3">
+                      <div className="mt-3 grid grid-cols-3 gap-2">
                         {referenceImages.map((img, index) => (
                           <div key={index} className="relative group">
-                            <img src={img} alt={`Reference ${index + 1}`} className="h-24 w-full rounded-lg object-cover border" />
-                            <button onClick={() => removeReference(index)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <img src={img} alt={`Ref ${index + 1}`} className="h-20 w-full rounded-lg object-cover border" />
+                            <button onClick={() => removeReference(index)} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <X className="h-3 w-3" />
                             </button>
                           </div>
@@ -387,39 +298,35 @@ const GigView = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="imagePrompt">Image Description</Label>
-                    <Textarea id="imagePrompt" placeholder={`e.g., "Professional ${gig.service_name} service banner..."`} value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)} className="mt-2 min-h-[100px]" />
+                    <Label className="text-xs">Image Description</Label>
+                    <Textarea placeholder={`e.g., "Professional ${gig.service_name} service banner..."`} value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)} className="mt-1.5 min-h-[80px]" />
                   </div>
 
                   <div>
-                    <Label htmlFor="designNotes">Additional Design Notes (Optional)</Label>
-                    <Textarea id="designNotes" placeholder="e.g., Include my service name prominently..." value={designNotes} onChange={(e) => setDesignNotes(e.target.value)} className="mt-2" />
+                    <Label className="text-xs">Design Notes (Optional)</Label>
+                    <Textarea placeholder="e.g., Include service name prominently..." value={designNotes} onChange={(e) => setDesignNotes(e.target.value)} className="mt-1.5" />
                   </div>
 
-                  <Button onClick={generateGigImage} disabled={generatingImage} className="w-full" size="lg">
-                    {generatingImage ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating Image...</>
-                    ) : (
-                      <><Sparkles className="mr-2 h-4 w-4" /> Generate Gig Image ({getDimensions().width}×{getDimensions().height})</>
-                    )}
+                  <Button onClick={generateGigImage} disabled={generatingImage} className="w-full gradient-btn text-primary-foreground" size="lg">
+                    {generatingImage ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="mr-2 h-4 w-4" /> Generate ({getDimensions().width}×{getDimensions().height})</>}
                   </Button>
 
                   {generatedImage && (
-                    <div className="mt-6 space-y-4">
-                      <h3 className="text-lg font-semibold">Generated Image</h3>
-                      <div className="overflow-hidden rounded-lg border bg-muted/20">
+                    <div className="mt-4 space-y-3">
+                      <h3 className="text-sm font-semibold">Generated Image</h3>
+                      <div className="overflow-hidden rounded-lg border">
                         <img src={generatedImage} alt="Generated gig image" className="h-auto w-full" />
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" onClick={() => {
+                        <Button variant="outline" size="sm" onClick={() => {
                           const link = document.createElement("a");
                           link.href = generatedImage;
                           link.download = `${gig.title?.replace(/\s+/g, "-") || "gig"}-image.png`;
                           link.click();
                         }}>
-                          <Download className="mr-2 h-4 w-4" /> Download PNG
+                          <Download className="mr-1.5 h-3.5 w-3.5" /> Download
                         </Button>
-                        <Button variant="outline" onClick={() => setGeneratedImage(null)}>Generate New</Button>
+                        <Button variant="outline" size="sm" onClick={() => setGeneratedImage(null)}>Generate New</Button>
                       </div>
                     </div>
                   )}
@@ -427,20 +334,15 @@ const GigView = () => {
               </Card>
             </TabsContent>
 
-            {/* SEO Score Tab */}
+            {/* SEO Score */}
             <TabsContent value="score">
-              <GigScoring 
-                gig={gig} 
-                onFixAll={async (updates) => {
-                  for (const [field, value] of Object.entries(updates)) {
-                    await updateGigField(field, value);
-                  }
-                  await loadGig();
-                }}
-              />
+              <GigScoring gig={gig} onFixAll={async (updates) => {
+                for (const [field, value] of Object.entries(updates)) await updateGigField(field, value);
+                await loadGig();
+              }} />
             </TabsContent>
 
-            {/* Export Tab */}
+            {/* Export */}
             <TabsContent value="export">
               <GigExport gig={gig} />
             </TabsContent>
@@ -451,26 +353,33 @@ const GigView = () => {
   );
 };
 
-const PricingCard = ({ tier, data }: { tier: string; data: any }) => (
-  <Card className="p-6">
-    <h3 className="mb-4 text-xl font-semibold">{tier}</h3>
-    <div className="mb-4 text-3xl font-bold text-primary">${data?.price || "TBD"}</div>
-    <div className="space-y-2 text-sm">
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Delivery:</span>
-        <span className="font-medium">{data?.delivery || "TBD"} days</span>
-      </div>
-      <div className="flex justify-between">
-        <span className="text-muted-foreground">Revisions:</span>
-        <span className="font-medium">{data?.revisions || "TBD"}</span>
+const SectionCard = ({ title, children, onCopy, regenerate }: { title: string; children: React.ReactNode; onCopy?: () => void; regenerate?: React.ReactNode }) => (
+  <Card className="p-4 md:p-5 shadow-card">
+    <div className="mb-3 flex items-center justify-between">
+      <h2 className="text-base md:text-lg font-semibold">{title}</h2>
+      <div className="flex gap-1.5">
+        {regenerate}
+        {onCopy && <Button variant="outline" size="icon" className="h-8 w-8" onClick={onCopy}><Copy className="h-3.5 w-3.5" /></Button>}
       </div>
     </div>
+    {children}
+  </Card>
+);
+
+const PricingCard = ({ tier, data }: { tier: string; data: any }) => (
+  <Card className="p-4 md:p-6 shadow-card">
+    <h3 className="mb-3 text-lg font-semibold">{tier}</h3>
+    <div className="mb-3 text-2xl font-bold text-primary">${data?.price || "TBD"}</div>
+    <div className="space-y-1.5 text-sm">
+      <div className="flex justify-between"><span className="text-muted-foreground">Delivery:</span><span className="font-medium">{data?.delivery || "TBD"} days</span></div>
+      <div className="flex justify-between"><span className="text-muted-foreground">Revisions:</span><span className="font-medium">{data?.revisions || "TBD"}</span></div>
+    </div>
     {data?.features && (
-      <ul className="mt-4 space-y-2 text-sm">
+      <ul className="mt-3 space-y-1.5 text-sm">
         {data.features.map((feature: string, index: number) => (
-          <li key={index} className="flex items-start gap-2">
+          <li key={index} className="flex items-start gap-1.5">
             <span className="text-primary">✓</span>
-            <span>{feature}</span>
+            <span>{cleanMarkdown(feature)}</span>
           </li>
         ))}
       </ul>
