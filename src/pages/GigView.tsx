@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Copy, Download, Sparkles, Loader2, Image as ImageIcon, Upload, X, Info, Eye, Search, BarChart3, FileText } from "lucide-react";
+import { ArrowLeft, Copy, Download, Sparkles, Loader2, Image as ImageIcon, Upload, X, Info, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FiverrPreview } from "@/components/gig/FiverrPreview";
 import { UpworkPreview } from "@/components/gig/UpworkPreview";
