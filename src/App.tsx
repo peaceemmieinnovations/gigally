@@ -8,6 +8,8 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import GigCreate from "./pages/GigCreate";
 import GigView from "./pages/GigView";
+import Outreach from "./pages/Outreach";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/gigs/create" element={<GigCreate />} />
           <Route path="/gigs/:id" element={<GigView />} />
+          <Route path="/outreach" element={<Outreach />} />
+          <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
