@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Target, TrendingUp, Zap, Star, Users, Award, ArrowRight, Check, BarChart3 } from "lucide-react";
+import logo from "@/assets/gigally-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -18,9 +19,7 @@ const Index = () => {
       <nav className="sticky top-0 z-50 border-b glass">
         <div className="container mx-auto flex items-center justify-between px-4 py-3 md:py-4">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary p-1.5">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="GigAlly logo" className="h-9 w-9" width={36} height={36} />
             <span className="text-lg md:text-xl font-bold gradient-text">GigAlly</span>
           </div>
 
@@ -252,7 +251,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
+              <img src={logo} alt="GigAlly" className="h-5 w-5" loading="lazy" width={20} height={20} />
               <span className="font-bold gradient-text">GigAlly</span>
             </div>
 

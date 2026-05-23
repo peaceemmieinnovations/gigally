@@ -18,6 +18,7 @@ import { RegenerateButton } from "@/components/gig/RegenerateButton";
 import { GigScoring } from "@/components/gig/GigScoring";
 import { GigExport } from "@/components/gig/GigExport";
 import { cleanMarkdown } from "@/lib/format";
+import { InlineEdit, TagsEdit } from "@/components/gig/InlineEdit";
 
 const IMAGE_DIMENSIONS = {
   fiverr_main: { width: 1280, height: 769, label: "Fiverr Main (1280×769)" },
@@ -147,17 +148,17 @@ const GigView = () => {
             <TabsContent value="overview" className="space-y-4">
               <SectionCard title="Title" onCopy={() => copyToClipboard(gig.title, "Title")}
                 regenerate={<RegenerateButton section="title" currentValue={gig.title} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("title", v)} />}>
-                <p className="text-base md:text-lg font-medium">{cleanMarkdown(gig.title)}</p>
+                <InlineEdit value={gig.title} onSave={(v) => updateGigField("title", v)} className="text-base md:text-lg font-medium" maxLength={80} />
               </SectionCard>
 
               <SectionCard title="Short Description" onCopy={() => copyToClipboard(gig.short_description, "Short description")}
                 regenerate={<RegenerateButton section="shortDescription" currentValue={gig.short_description} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("short_description", v)} />}>
-                <p className="text-sm text-muted-foreground">{cleanMarkdown(gig.short_description)}</p>
+                <InlineEdit value={gig.short_description} onSave={(v) => updateGigField("short_description", v)} multiline className="text-sm text-muted-foreground" maxLength={160} />
               </SectionCard>
 
               <SectionCard title="Full Description" onCopy={() => copyToClipboard(gig.description, "Description")}
                 regenerate={<RegenerateButton section="description" currentValue={gig.description} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("description", v)} />}>
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{cleanMarkdown(gig.description)}</p>
+                <InlineEdit value={gig.description} onSave={(v) => updateGigField("description", v)} multiline className="text-sm whitespace-pre-wrap leading-relaxed" maxLength={1200} />
                 <div className="mt-3 text-xs text-muted-foreground">
                   {gig.description?.length || 0} / 1200 characters
                 </div>
@@ -165,11 +166,7 @@ const GigView = () => {
 
               <SectionCard title={`Tags (${gig.tags?.length || 0}/14)`}
                 regenerate={<RegenerateButton section="tags" currentValue={gig.tags?.join(", ")} serviceName={gig.service_name} marketplace={gig.marketplace} tone={gig.tone} keywords={researchKeywords} onRegenerated={(v) => updateGigField("tags", v)} />}>
-                <div className="flex flex-wrap gap-1.5">
-                  {gig.tags?.map((tag: string, index: number) => (
-                    <Badge key={index} variant="secondary" className="text-xs">{cleanMarkdown(tag)}</Badge>
-                  ))}
-                </div>
+                <TagsEdit tags={gig.tags || []} onSave={(t) => updateGigField("tags", t)} />
               </SectionCard>
             </TabsContent>
 

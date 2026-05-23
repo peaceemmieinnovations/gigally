@@ -77,6 +77,78 @@ export type Database = {
         }
         Relationships: []
       }
+      message_bank: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          niche: string | null
+          platform: string
+          template: string
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          niche?: string | null
+          platform?: string
+          template: string
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          niche?: string | null
+          platform?: string
+          template?: string
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      outreach_campaigns: {
+        Row: {
+          base_message: string
+          created_at: string
+          id: string
+          name: string
+          niche: string | null
+          platform: string
+          recipients: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          base_message: string
+          created_at?: string
+          id?: string
+          name: string
+          niche?: string | null
+          platform?: string
+          recipients?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          base_message?: string
+          created_at?: string
+          id?: string
+          name?: string
+          niche?: string | null
+          platform?: string
+          recipients?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -97,6 +169,36 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prompt_bank: {
+        Row: {
+          active: boolean
+          category: string
+          content: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []

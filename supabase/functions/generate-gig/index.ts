@@ -221,6 +221,12 @@ Your gigs consistently outrank competitors because you:
       }),
     });
 
+    if (response.status === 429) {
+      return new Response(JSON.stringify({ error: "Rate limited. Please wait and try again." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (response.status === 402) {
+      return new Response(JSON.stringify({ error: "AI credits exhausted. Add funds in workspace settings." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     if (!response.ok) {
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
