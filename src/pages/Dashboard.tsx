@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, LogOut, Settings, TrendingUp, Loader2, Image as ImageIcon, BarChart3, Sparkles, Trash2 } from "lucide-react";
+import { Plus, FileText, LogOut, Settings, TrendingUp, Loader2, Image as ImageIcon, BarChart3, Sparkles, Trash2, Send, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GigImageDesigner } from "@/components/gig/GigImageDesigner";
 import { GigComparison } from "@/components/gig/GigComparison";
 import type { User } from "@supabase/supabase-js";
+import logo from "@/assets/gigally-logo.png";
 
 interface TrendingNiche {
   keyword: string;
@@ -27,12 +28,13 @@ const Dashboard = () => {
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [showImageDesigner, setShowImageDesigner] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const gigsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { navigate("/auth"); }
-      else { setUser(session.user); loadGigs(session.user.id); }
+      else { setUser(session.user); loadGigs(session.user.id); checkAdmin(session.user.id); }
       setLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -41,6 +43,11 @@ const Dashboard = () => {
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkAdmin = async (uid: string) => {
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+    setIsAdmin((data || []).some((r: any) => r.role === "admin"));
+  };
 
   const loadGigs = async (userId: string) => {
     const { data, error } = await supabase.from("gig_drafts").select("*").eq("user_id", userId).order("created_at", { ascending: false });
@@ -85,13 +92,12 @@ const Dashboard = () => {
       <header className="sticky top-0 z-40 border-b glass">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-secondary p-1.5">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="GigAlly" className="h-8 w-8" loading="lazy" width={32} height={32} />
             <span className="text-lg font-bold gradient-text">GigAlly</span>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-9 w-9"><Settings className="h-4 w-4" /></Button>
+            {isAdmin && <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate("/admin")} title="Admin"><Shield className="h-4 w-4" /></Button>}
+            <Button variant="ghost" size="icon" className="h-9 w-9" title="Settings"><Settings className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleSignOut}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
@@ -105,7 +111,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8 md:mb-10 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-5">
+        <div className="mb-8 md:mb-10 grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-6">
           <Card className="group cursor-pointer border-2 border-primary/20 p-4 md:p-5 transition-all hover:border-primary hover:shadow-elevated" onClick={() => navigate("/gigs/create")}>
             <div className="mb-3 inline-flex rounded-xl gradient-btn p-2.5 text-primary-foreground transition-transform group-hover:scale-110">
               <Plus className="h-5 w-5" />
@@ -136,6 +142,14 @@ const Dashboard = () => {
             </div>
             <h3 className="mb-1 text-sm md:text-base font-semibold">Compare</h3>
             <p className="text-xs text-muted-foreground hidden md:block">SEO analysis</p>
+          </Card>
+
+          <Card className="group cursor-pointer border-2 border-secondary/20 p-4 md:p-5 transition-all hover:border-secondary hover:shadow-elevated" onClick={() => navigate("/outreach")}>
+            <div className="mb-3 inline-flex rounded-xl bg-gradient-to-br from-primary to-secondary p-2.5 text-primary-foreground transition-transform group-hover:scale-110">
+              <Send className="h-5 w-5" />
+            </div>
+            <h3 className="mb-1 text-sm md:text-base font-semibold">Outreach AI</h3>
+            <p className="text-xs text-muted-foreground hidden md:block">Personalized DMs</p>
           </Card>
 
           <Card className="cursor-pointer col-span-2 lg:col-span-1 p-4 md:p-5 transition-all hover:shadow-elevated shadow-card" onClick={fetchTrendingNiches}>
