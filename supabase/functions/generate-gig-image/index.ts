@@ -21,20 +21,20 @@ serve(async (req) => {
 
     console.log("Generating gig image for:", gigTitle, "Dimensions:", width, "x", height);
 
-    // Enhanced prompt for gig images with blue-orange gradient theme
-    let enhancedPrompt = `Create a PROFESSIONAL, HIGH-QUALITY gig image for a freelance marketplace (Fiverr/Upwork style).
+    // Enhanced prompt for gig images
+    let enhancedPrompt = `Design a STUNNING, PHOTOREALISTIC, professional gig thumbnail for a freelance marketplace (Fiverr / Upwork style) that would stop a buyer from scrolling.
 
-${prompt}
+SUBJECT / SERVICE: ${prompt}
 
-DESIGN REQUIREMENTS:
-- Incorporate blue and orange gradient colors as the main theme (#0B7DF2 to #FF7A00)
-- Professional, modern design suitable for a marketplace thumbnail
-- Clean typography with readable text if any
-- High contrast and visually appealing composition
-- Optimized for ${width}x${height}px dimensions
-- Balance between visual appeal and professionalism
-- Include subtle depth with shadows or gradients
-- Ultra high resolution quality`;
+ART DIRECTION (follow strictly):
+- Crisp, modern, premium look — like a top-rated seller's hero image.
+- Strong focal point with clear visual hierarchy and balanced composition (rule of thirds).
+- Tasteful blue-to-orange accent palette (#0B7DF2 → #FF7A00) used as accents, NOT a flat gradient wash.
+- Realistic lighting, soft shadows, depth and texture — avoid flat clipart or generic stock vibes.
+- If you include any text, keep it SHORT (max 3-4 words), perfectly spelled, large and legible with high contrast.
+- Clean negative space, no clutter, no watermarks, no logos, no lorem-ipsum gibberish.
+- Aspect ratio target ${width}x${height}px, sharp and high resolution.
+- Marketplace-ready, trustworthy and conversion-focused.`;
 
     // If reference images provided, add instruction to be inspired but not copy
     if (referenceImages && referenceImages.length > 0) {
@@ -68,7 +68,7 @@ Reference images have been provided for style inspiration. Create an ORIGINAL de
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
+        model: "google/gemini-3-pro-image-preview",
         messages: [
           {
             role: "user",
