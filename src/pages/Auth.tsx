@@ -45,7 +45,7 @@ const Auth = () => {
               className: { button: "!bg-gradient-to-r !from-primary !to-secondary hover:opacity-90" },
             }}
             providers={["google"]}
-            redirectTo={`${window.location.origin}/dashboard`}
+            redirectTo={`${window.location.origin}/reset-password`}
           />
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">By signing in, you agree to our Terms of Service</p>
