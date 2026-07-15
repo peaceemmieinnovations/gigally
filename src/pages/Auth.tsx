@@ -5,6 +5,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
+// Pin auth redirects to the published domain so password reset emails
+// never route back to a gated preview URL.
+const APP_ORIGIN = "https://gigally.lovable.app";
+
 const Auth = () => {
   const navigate = useNavigate();
 
@@ -45,7 +49,7 @@ const Auth = () => {
               className: { button: "!bg-gradient-to-r !from-primary !to-secondary hover:opacity-90" },
             }}
             providers={["google"]}
-            redirectTo={`${window.location.origin}/reset-password`}
+            redirectTo={`${APP_ORIGIN}/reset-password`}
           />
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">By signing in, you agree to our Terms of Service</p>
