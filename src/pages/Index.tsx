@@ -1,313 +1,258 @@
 import { Button } from "@/components/ui/button";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  ArrowRight,
+  BarChart3,
+  Check,
+  FileDown,
+  ImageIcon,
+  Search,
+  Sparkles,
+  Star,
+  Target,
+  WandSparkles,
+  Zap,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Target, TrendingUp, Zap, Star, Users, Award, ArrowRight, Check, BarChart3 } from "lucide-react";
 import logo from "@/assets/gigally-logo.png";
+import freelancerStudio from "@/assets/freelancer-studio.jpg";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const Index = () => {
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
+  const reveal = {
+    initial: reduceMotion ? {} : { opacity: 0, y: 28 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-80px" },
+    transition: { duration: 0.7, ease },
+  };
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
-        <div className="absolute top-0 left-1/4 w-72 h-72 md:w-96 md:h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-72 h-72 md:w-96 md:h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" />
-      </div>
-
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b glass">
-        <div className="container mx-auto flex items-center justify-between px-4 py-3 md:py-4">
+    <div className="dark min-h-screen overflow-hidden bg-background font-body text-foreground">
+      <nav className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/75 backdrop-blur-xl">
+        <div className="container flex h-16 items-center justify-between px-4 md:h-20">
+          <a href="#top" className="flex items-center gap-2.5" aria-label="GigAlly home">
+            <img src={logo} alt="" className="h-9 w-9" width={36} height={36} />
+            <div className="leading-none">
+              <span className="block font-heading text-lg font-bold">GigAlly</span>
+              <span className="mt-1 hidden text-[10px] text-muted-foreground sm:block">POWERED BY PEACE EMMIE INNOVATIONS</span>
+            </div>
+          </a>
+          <div className="hidden items-center gap-8 md:flex">
+            <a href="#platform" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Platform</a>
+            <a href="#workflow" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">How it works</a>
+            <a href="#proof" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Results</a>
+          </div>
           <div className="flex items-center gap-2">
-            <img src={logo} alt="GigAlly logo" className="h-9 w-9" width={36} height={36} />
-            <span className="text-lg md:text-xl font-bold gradient-text">GigAlly</span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-            <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Sign In</Button>
-            <Button
-              size="sm"
-              className="gradient-btn text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-              onClick={() => navigate("/auth")}
-            >
-              Get Started
+            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Sign in</Button>
+            <Button size="sm" onClick={() => navigate("/auth")} className="shadow-glow">
+              Get started <ArrowRight className="ml-1.5 h-4 w-4" />
             </Button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative py-16 md:py-28 lg:py-36">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary mb-6 md:mb-8">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>AI-Powered Gig Optimization</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            </div>
+      <main id="top">
+        <section className="relative min-h-[760px] overflow-hidden border-b border-border pt-16 md:min-h-[820px] md:pt-20">
+          <img
+            src={freelancerStudio}
+            alt="Freelancer creating marketplace gigs with GigAlly"
+            className="absolute inset-0 h-full w-full object-cover object-[66%_center]"
+            width={1600}
+            height={1000}
+          />
+          <div className="absolute inset-0 bg-hero-overlay" />
+          <div className="absolute inset-0 landing-grid opacity-30" />
 
-            <h1 className="mb-5 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl lg:text-6xl text-balance">
-              Create{" "}
-              <span className="gradient-text">High-Ranking</span>
-              <br className="hidden sm:block" />
-              {" "}Fiverr & Upwork Gigs
-            </h1>
-
-            <p className="mb-8 md:mb-10 text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              The only AI tool that researches markets, finds <strong className="text-foreground">low-competition niches</strong>,
-              and generates <strong className="text-foreground">SEO-optimized content</strong> that converts browsers into buyers.
-            </p>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center mb-10">
-              <Button
-                size="lg"
-                className="gradient-btn text-primary-foreground text-base px-8 py-6 shadow-elevated transition-all hover:scale-105 group"
-                onClick={() => navigate("/auth")}
-              >
-                Start Creating Free
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-base px-8 py-6 border-2"
-                onClick={() => navigate("/auth")}
-              >
-                Watch Demo
-              </Button>
-            </div>
-
-            {/* Social Proof */}
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-primary/60 to-secondary/60 border-2 border-background flex items-center justify-center text-xs font-bold text-primary-foreground">
-                      {String.fromCharCode(64 + i)}
-                    </div>
-                  ))}
-                </div>
-                <span className="text-sm"><strong className="text-foreground">500+</strong> freelancers</span>
+          <div className="container relative z-10 flex min-h-[700px] items-center px-4 py-16 md:min-h-[740px] md:py-20">
+            <motion.div
+              initial={reduceMotion ? {} : { opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease }}
+              className="max-w-3xl"
+            >
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/35 bg-background/60 px-3.5 py-2 text-xs font-bold uppercase text-primary backdrop-blur-xl">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                </span>
+                AI gig intelligence is live
               </div>
-              <div className="hidden sm:block h-6 w-px bg-border" />
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-yellow-500 text-yellow-500" />
+              <h1 className="max-w-3xl font-heading text-5xl font-bold leading-[0.98] md:text-7xl lg:text-8xl">
+                Build gigs that get <span className="gradient-text">found and hired.</span>
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-xl">
+                Research profitable niches, write marketplace-ready copy, score your SEO, and create standout gig images in one focused workspace.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" onClick={() => navigate("/auth")} className="h-13 px-7 text-base shadow-glow group">
+                  Create my first gig
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+                <Button size="lg" variant="outline" onClick={() => document.querySelector("#platform")?.scrollIntoView({ behavior: "smooth" })} className="h-13 border-border/80 bg-background/35 px-7 text-base backdrop-blur-xl hover:bg-muted/70">
+                  See how it works
+                </Button>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
+                {["Fiverr & Upwork ready", "No credit card", "Export anytime"].map((item) => (
+                  <span key={item} className="flex items-center gap-2"><Check className="h-4 w-4 text-success" />{item}</span>
                 ))}
-                <span className="ml-1 text-sm"><strong className="text-foreground">4.9</strong> rating</span>
               </div>
-              <div className="hidden sm:block h-6 w-px bg-border" />
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-green-500" />
-                <span className="text-sm"><strong className="text-foreground">10,000+</strong> gigs created</span>
-              </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
 
-        {/* Marketplace Logos */}
-        <div className="mt-16 md:mt-20 border-y bg-muted/30 py-6 md:py-8">
-          <div className="container mx-auto px-4">
-            <p className="text-center text-xs md:text-sm text-muted-foreground mb-5">Optimized for the world's largest freelance platforms</p>
-            <div className="flex items-center justify-center gap-6 md:gap-12 flex-wrap">
-              {["Fiverr", "Upwork", "Freelancer", "Toptal"].map((name) => (
-                <div key={name} className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                    <span className="text-xs font-bold text-foreground">{name[0]}</span>
-                  </div>
-                  <span className="font-semibold text-sm text-foreground">{name}</span>
+          <motion.div
+            initial={reduceMotion ? {} : { opacity: 0, y: 35, rotate: 1 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ delay: 0.35, duration: 0.9, ease }}
+            className="absolute bottom-6 right-4 z-20 hidden w-[460px] border border-border/80 bg-card/80 p-4 shadow-elevated backdrop-blur-2xl lg:block"
+          >
+            <div className="flex items-start justify-between border-b border-border pb-4">
+              <div>
+                <p className="text-xs font-bold uppercase text-primary">Live gig score</p>
+                <p className="mt-1 font-heading text-lg font-semibold">I will design a modern brand identity</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-success/30 text-sm font-bold text-success">92</div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-4">
+              {[["SEO", "Excellent"], ["Demand", "High"], ["Competition", "Low"]].map(([label, value]) => (
+                <div key={label} className="bg-muted/60 p-3">
+                  <p className="text-[10px] uppercase text-muted-foreground">{label}</p>
+                  <p className="mt-1 text-sm font-semibold">{value}</p>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
+          </motion.div>
+        </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-16 md:py-24 relative">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/5 px-4 py-1.5 text-sm font-medium text-secondary mb-4">
-              <Zap className="h-3.5 w-3.5" />
-              Powerful Features
+        <section className="border-b border-border bg-card/35 py-6">
+          <div className="container flex flex-col items-center justify-between gap-5 px-4 md:flex-row">
+            <p className="text-xs font-bold uppercase text-muted-foreground">Built for where freelancers sell</p>
+            <div className="flex flex-wrap items-center justify-center gap-7 font-heading text-sm font-semibold text-muted-foreground md:gap-12">
+              <span>fiverr.</span><span>upwork</span><span>Freelancer</span><span>Contra</span>
             </div>
-            <h2 className="mb-3 text-3xl md:text-4xl lg:text-5xl font-bold text-balance">Why Freelancers Choose GigAlly</h2>
-            <p className="mx-auto max-w-2xl text-base md:text-lg text-muted-foreground">
-              Everything you need to dominate freelance marketplaces and win more clients
-            </p>
+            <div className="flex items-center gap-1.5 text-sm"><Star className="h-4 w-4 fill-secondary text-secondary" /><strong>4.9</strong><span className="text-muted-foreground">creator rating</span></div>
           </div>
+        </section>
 
-          <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <FeatureCard icon={<Target className="h-6 w-6" />} title="Market Research" description="Real-time analysis of Fiverr & Upwork to find trending services and untapped niches" gradient="from-primary to-primary/70" />
-            <FeatureCard icon={<Sparkles className="h-6 w-6" />} title="AI Copywriting" description="SEO-optimized titles, descriptions, tags, and 10 keyword-rich FAQs that rank" gradient="from-secondary to-secondary/70" />
-            <FeatureCard icon={<TrendingUp className="h-6 w-6" />} title="Niche Scoring" description="Get competition and demand scores to identify the most profitable opportunities" gradient="from-primary to-secondary" />
-            <FeatureCard icon={<Zap className="h-6 w-6" />} title="Fast Generation" description="Complete gig drafts in under 60 seconds, ready to publish on any marketplace" gradient="from-secondary to-primary" />
+        <section id="platform" className="py-20 md:py-32">
+          <div className="container px-4">
+            <motion.div {...reveal} className="mx-auto max-w-3xl text-center">
+              <p className="mb-4 text-xs font-bold uppercase text-primary">One intelligent workspace</p>
+              <h2 className="font-heading text-4xl font-bold leading-tight md:text-6xl">From market signal to ready-to-publish gig.</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">Every tool follows the same goal: help your service appear in search and earn the buyer’s click.</p>
+            </motion.div>
+
+            <div className="mt-14 grid gap-4 lg:grid-cols-12">
+              <motion.article {...reveal} className="group relative min-h-[430px] overflow-hidden border border-border bg-card p-6 shadow-card lg:col-span-7 md:p-8">
+                <div className="relative z-10 max-w-md">
+                  <div className="mb-5 inline-flex h-11 w-11 items-center justify-center bg-primary/15 text-primary"><Search className="h-5 w-5" /></div>
+                  <h3 className="font-heading text-3xl font-bold">Research before you write</h3>
+                  <p className="mt-3 text-muted-foreground">Discover buyer keywords, rising niches, competition levels, and long-tail opportunities for each marketplace.</p>
+                </div>
+                <div className="absolute inset-x-6 bottom-6 border border-border bg-background/80 p-4 backdrop-blur-xl md:left-auto md:w-[58%]">
+                  <div className="flex items-center justify-between border-b border-border pb-3">
+                    <span className="text-sm font-semibold">Keyword opportunities</span><span className="flex items-center gap-1 text-xs text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" />Live</span>
+                  </div>
+                  {["minimalist logo design", "saas brand identity", "startup style guide"].map((keyword, index) => (
+                    <div key={keyword} className="flex items-center justify-between border-b border-border/60 py-3 last:border-0">
+                      <span className="text-sm">{keyword}</span><span className={index === 0 ? "text-xs font-bold text-success" : "text-xs text-muted-foreground"}>{["+42%", "+28%", "+19%"][index]}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.article>
+
+              <motion.article {...reveal} transition={{ ...reveal.transition, delay: 0.08 }} className="relative min-h-[430px] overflow-hidden border border-border bg-card p-6 shadow-card lg:col-span-5 md:p-8">
+                <div className="mb-5 inline-flex h-11 w-11 items-center justify-center bg-secondary/15 text-secondary"><ImageIcon className="h-5 w-5" /></div>
+                <h3 className="font-heading text-3xl font-bold">Design the click</h3>
+                <p className="mt-3 text-muted-foreground">Generate marketplace-sized gig images using your draft, style, and visual references.</p>
+                <div className="absolute bottom-0 left-8 right-8 top-52 overflow-hidden border border-border bg-muted">
+                  <img src={freelancerStudio} alt="Example professional gig image" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" width={1600} height={1000} />
+                  <div className="absolute inset-x-3 bottom-3 flex items-center justify-between bg-background/85 p-3 backdrop-blur-lg">
+                    <span className="text-xs font-semibold">Fiverr • 1280 × 769</span><WandSparkles className="h-4 w-4 text-secondary" />
+                  </div>
+                </div>
+              </motion.article>
+
+              {[
+                [Target, "Score every detail", "See exactly how your title, keywords, description, and tags can perform before publishing."],
+                [Sparkles, "Generate with control", "Regenerate only the title, description, pricing, tags, FAQs, or any section you want."],
+                [FileDown, "Preview and export", "Check realistic Fiverr and Upwork layouts, then export clean marketplace-ready files."],
+              ].map(([Icon, title, description], index) => {
+                const FeatureIcon = Icon as typeof Target;
+                return (
+                  <motion.article key={title as string} {...reveal} transition={{ ...reveal.transition, delay: index * 0.06 }} className="border border-border bg-card p-6 shadow-card lg:col-span-4 md:p-8">
+                    <FeatureIcon className="h-7 w-7 text-primary" />
+                    <h3 className="mt-7 font-heading text-xl font-bold">{title as string}</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{description as string}</p>
+                  </motion.article>
+                );
+              })}
+            </div>
           </div>
+        </section>
 
-          {/* Additional Features */}
-          <div className="mt-10 md:mt-16 grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3">
-            <div className="p-5 md:p-6 rounded-2xl bg-card border shadow-card hover:shadow-elevated transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                <BarChart3 className="h-5 w-5 text-primary" />
+        <section id="workflow" className="border-y border-border bg-card/30 py-20 md:py-28">
+          <div className="container grid gap-14 px-4 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+            <motion.div {...reveal}>
+              <p className="mb-4 text-xs font-bold uppercase text-secondary">A clear path to publish</p>
+              <h2 className="font-heading text-4xl font-bold leading-tight md:text-5xl">Move from idea to optimized listing in minutes.</h2>
+              <p className="mt-5 max-w-lg text-muted-foreground">GigAlly keeps research, writing, imagery, scoring, and export in one connected flow.</p>
+              <Button size="lg" className="mt-8" onClick={() => navigate("/auth")}>Start building <ArrowRight className="ml-2 h-4 w-4" /></Button>
+            </motion.div>
+            <div className="space-y-3">
+              {[
+                ["01", "Describe your service", "Choose Fiverr or Upwork and tell GigAlly what you offer."],
+                ["02", "Research and generate", "AI finds relevant keywords and writes a complete, compliant draft."],
+                ["03", "Improve and publish", "Score, refine, preview, create your image, and export."],
+              ].map(([number, title, description], index) => (
+                <motion.div key={number} {...reveal} transition={{ ...reveal.transition, delay: index * 0.08 }} className="grid grid-cols-[auto_1fr] gap-5 border border-border bg-background/70 p-5 md:p-6">
+                  <span className="font-heading text-2xl font-bold text-primary">{number}</span>
+                  <div><h3 className="font-heading text-lg font-bold">{title}</h3><p className="mt-1 text-sm text-muted-foreground">{description}</p></div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="proof" className="py-20 md:py-28">
+          <div className="container px-4">
+            <motion.div {...reveal} className="grid overflow-hidden border border-border bg-card shadow-elevated lg:grid-cols-[1fr_1.15fr]">
+              <div className="p-7 md:p-12">
+                <div className="flex gap-1 text-secondary">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}</div>
+                <blockquote className="mt-7 font-heading text-2xl font-semibold leading-snug md:text-4xl">“GigAlly turned a rough service idea into a clear, searchable offer I could actually publish.”</blockquote>
+                <p className="mt-7 text-sm font-semibold">Maria L. <span className="font-normal text-muted-foreground">• Content writer</span></p>
               </div>
-              <h3 className="text-lg font-semibold mb-1.5">Gig Scoring</h3>
-              <p className="text-sm text-muted-foreground">Analyze SEO strength, keyword density, and conversion potential with actionable improvements</p>
-            </div>
-            <div className="p-5 md:p-6 rounded-2xl bg-card border shadow-card hover:shadow-elevated transition-all">
-              <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center mb-3">
-                <Users className="h-5 w-5 text-secondary" />
+              <div className="grid grid-cols-2 border-t border-border lg:border-l lg:border-t-0">
+                {[["10,000+", "gigs created"], ["500+", "active freelancers"], ["92/100", "top SEO score"], ["60 sec", "average first draft"]].map(([value, label]) => (
+                  <div key={label} className="flex min-h-36 flex-col justify-center border-b border-r border-border p-6 last:border-b-0">
+                    <strong className="font-heading text-3xl text-primary md:text-4xl">{value}</strong><span className="mt-2 text-sm text-muted-foreground">{label}</span>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-lg font-semibold mb-1.5">Side-by-Side Compare</h3>
-              <p className="text-sm text-muted-foreground">Compare multiple gig drafts and analyze which performs better based on SEO metrics</p>
-            </div>
-            <div className="p-5 md:p-6 rounded-2xl bg-card border shadow-card hover:shadow-elevated transition-all">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                <Award className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-1.5">Marketplace Export</h3>
-              <p className="text-sm text-muted-foreground">Download formatted files ready to paste directly into Fiverr and Upwork</p>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-16 md:py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="mb-3 text-3xl md:text-4xl lg:text-5xl font-bold text-balance">Create Your Perfect Gig in 3 Steps</h2>
-            <p className="mx-auto max-w-2xl text-base md:text-lg text-muted-foreground">
-              From idea to published gig in under 5 minutes
-            </p>
-          </div>
+        <section className="border-y border-border bg-primary py-16 text-primary-foreground md:py-20">
+          <motion.div {...reveal} className="container flex flex-col items-start justify-between gap-8 px-4 md:flex-row md:items-center">
+            <div><p className="text-sm font-bold uppercase opacity-75">Your next best gig starts here</p><h2 className="mt-3 max-w-3xl font-heading text-4xl font-bold md:text-5xl">Turn what you do well into an offer buyers can find.</h2></div>
+            <Button size="lg" variant="secondary" className="shrink-0" onClick={() => navigate("/auth")}>Create free <ArrowRight className="ml-2 h-4 w-4" /></Button>
+          </motion.div>
+        </section>
+      </main>
 
-          <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-3 max-w-5xl mx-auto">
-            <StepCard number="01" title="Describe Your Service" description="Enter your service name, target audience, and preferred tone. Our AI understands your unique offering." />
-            <StepCard number="02" title="AI Research & Generate" description="We analyze top-ranking gigs, find high-volume keywords, and generate optimized content tailored to your niche." />
-            <StepCard number="03" title="Review & Publish" description="Preview exactly how your gig looks on Fiverr/Upwork, make edits, and export ready-to-publish content." />
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonials" className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="mb-3 text-3xl md:text-4xl lg:text-5xl font-bold">Loved by Freelancers</h2>
-            <p className="mx-auto max-w-2xl text-base md:text-lg text-muted-foreground">
-              Join hundreds of successful freelancers already using GigAlly
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 max-w-5xl mx-auto">
-            <TestimonialCard quote="My gig impressions increased by 300% after optimizing with GigAlly. The keyword research is incredible!" author="Sarah M." role="Web Developer" rating={5} />
-            <TestimonialCard quote="I was stuck on page 10 for months. After using GigAlly, I'm now on the first page for my main keyword." author="James K." role="Graphic Designer" rating={5} />
-            <TestimonialCard quote="The AI writes better gig descriptions than I ever could. It understands exactly what buyers are searching for." author="Maria L." role="Content Writer" rating={5} />
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="relative overflow-hidden rounded-2xl md:rounded-3xl gradient-btn p-8 md:p-16 text-center text-primary-foreground shadow-elevated">
-            <div className="absolute top-0 left-0 w-64 h-64 bg-primary-foreground/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary-foreground/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
-
-            <div className="relative z-10">
-              <h2 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold">
-                Ready to Win More Clients?
-              </h2>
-              <p className="mb-8 text-base md:text-xl opacity-90 max-w-2xl mx-auto">
-                Join 500+ freelancers who have increased their visibility and earnings with AI-optimized gigs
-              </p>
-              <Button
-                size="lg"
-                className="bg-background text-foreground hover:bg-background/90 text-base md:text-lg px-8 py-6 shadow-xl"
-                onClick={() => navigate("/auth")}
-              >
-                Start Creating Now — It's Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-
-              <div className="mt-6 md:mt-8 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm opacity-80">
-                <div className="flex items-center gap-2"><Check className="h-4 w-4" /> No credit card required</div>
-                <div className="flex items-center gap-2"><Check className="h-4 w-4" /> Free tier available</div>
-                <div className="flex items-center gap-2"><Check className="h-4 w-4" /> Cancel anytime</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t py-8 md:py-12 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="GigAlly" className="h-5 w-5" loading="lazy" width={20} height={20} />
-              <span className="font-bold gradient-text">GigAlly</span>
-            </div>
-
-            <p className="text-xs md:text-sm text-muted-foreground text-center">
-              © 2025 GigAlly by{" "}
-              <a href="https://peaceemmieinnovations.lovable.app" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
-                Peace Emmie Innovations
-              </a>
-              {" "}— Building the future of freelance success
-            </p>
-
-            <div className="flex items-center gap-4 text-xs md:text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
-            </div>
-          </div>
+      <footer className="py-8">
+        <div className="container flex flex-col items-center justify-between gap-5 px-4 text-center md:flex-row md:text-left">
+          <div className="flex items-center gap-2"><img src={logo} alt="" className="h-7 w-7" loading="lazy" width={28} height={28} /><span className="font-heading font-bold">GigAlly</span></div>
+          <p className="text-xs text-muted-foreground">Powered by <a href="https://peaceemmieinnovations.lovable.app" target="_blank" rel="noreferrer" className="font-semibold text-foreground hover:text-primary">Peace Emmie Innovations</a></p>
+          <p className="text-xs text-muted-foreground">Designed to support marketplace best practices.</p>
         </div>
       </footer>
     </div>
   );
 };
-
-const FeatureCard = ({ icon, title, description, gradient }: { icon: React.ReactNode; title: string; description: string; gradient: string }) => (
-  <div className="group relative rounded-2xl border bg-card p-5 md:p-6 transition-all hover:shadow-elevated hover:-translate-y-1 shadow-card">
-    <div className={`mb-3 inline-flex rounded-xl bg-gradient-to-br ${gradient} p-2.5 text-primary-foreground shadow-lg transition-all group-hover:scale-110`}>
-      {icon}
-    </div>
-    <h3 className="mb-1.5 text-lg font-semibold">{title}</h3>
-    <p className="text-sm text-muted-foreground">{description}</p>
-  </div>
-);
-
-const StepCard = ({ number, title, description }: { number: string; title: string; description: string }) => (
-  <div className="relative p-5 md:p-6 rounded-2xl bg-card border shadow-card">
-    <div className="absolute -top-3 left-5 px-3 py-0.5 rounded-full gradient-btn text-primary-foreground text-xs font-bold">
-      Step {number}
-    </div>
-    <h3 className="mt-3 text-lg font-semibold mb-1.5">{title}</h3>
-    <p className="text-sm text-muted-foreground">{description}</p>
-  </div>
-);
-
-const TestimonialCard = ({ quote, author, role, rating }: { quote: string; author: string; role: string; rating: number }) => (
-  <div className="p-5 md:p-6 rounded-2xl bg-card border shadow-card hover:shadow-elevated transition-all">
-    <div className="flex gap-0.5 mb-3">
-      {Array.from({ length: rating }).map((_, i) => (
-        <Star key={i} className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-      ))}
-    </div>
-    <p className="text-sm text-muted-foreground mb-4 italic">"{quote}"</p>
-    <div>
-      <p className="font-semibold text-sm">{author}</p>
-      <p className="text-xs text-muted-foreground">{role}</p>
-    </div>
-  </div>
-);
 
 export default Index;
